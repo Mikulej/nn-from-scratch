@@ -82,7 +82,7 @@ IMAGE_AMOUNT = 10
 weights = np.ndarray((784,IMAGE_AMOUNT),dtype=np.longdouble)#array 78400x1 (1-dimensional data is Monochrome) (3-diemnsional data is RGB)
 
 for i in weights:
-    i = random.uniform(1.0,5.0) 
+    i = random.uniform(-1.0,1.0) 
 
 #weights = 2 * np.random.random((784,IMAGE_AMOUNT)) - 1
 
@@ -93,8 +93,7 @@ y = []
 iter = ds.iter(batch_size=1)
 j = 0
 for i in iter:
-    #print(i["label"][0])
-    print(j)
+    #print(j)
     X.append(convertToPixelsMono(i["image"][0]))
     y.append(i["label"][0])
     j += 1
@@ -104,21 +103,27 @@ X = np.array(X,dtype=np.longdouble)
 y = np.array(y)
 
 print(X.shape)
+# for i in X:
+#     print(i)
 print(weights.shape)
+#print(weights)
 #Train
 for j in range(10):
-    #X = convertToPixelsMono(ds[1]["image"])
     #forward, compute first layer activations (sigmoid)
-    #sigmoided = np.ndarray((784,784))
     dot_product = np.dot(X,weights)
-    print(dot_product)
-    print(dot_product.shape)
-    for k in dot_product:
-        k = sigmoid(k)
+    #print("dot_product=",dot_product)
+    #print(dot_product.shape)
+    for row in dot_product:
+        for k in row:
+            k = sigmoid(k)
     l1 = dot_product
     #l1 = 1/(1+np.exp(-(np.dot(X,weights))))
     #backward
     l1_delta = (y - l1) * (l1 * (1-l1))
     #update
     weights += X.T.dot(l1_delta)
+
+for row in weights:
+    for i in row:
+        print(i)
 
