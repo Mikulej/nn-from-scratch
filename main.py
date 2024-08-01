@@ -38,6 +38,24 @@ def sigmoid(x):
     z = np.exp(x)
     return z/(1+z)
   
+def svm_loss(label_index: int,output) -> int:
+    loss: np.float64 = 0 # |  ||
+                         # || |_
+    i: int = 0
+    output = output.T
+    for row in output:
+        for c in row:
+            print(c)
+        #print(row)
+        if label_index == i:
+            i += 1
+            continue
+        value: np.float64 = max(0,row[i]-row[label_index]+1.0)
+        loss += value
+        print("Loss =",loss," value =",value)
+        i += 1
+    return loss
+  
 #CS231n example 2 layer network
 # X = np.array([[0,0,1],[0,1,1],[1,0,1],[1,1,1]])
 # y = np.array([[0,1,1,0]]).T
@@ -61,7 +79,7 @@ def sigmoid(x):
 # print(ds.info.features)
 
 ds = load_dataset("ylecun/mnist", split="train")
-#ds = load_dataset("ylecun/mnist", split="test")
+ds_test = load_dataset("ylecun/mnist", split="test")
 print(ds)
 #get label
 # print("Label of image nr0 is: ", ds["label"][0])
@@ -77,12 +95,12 @@ print(ds)
 # print(ds[2])
 
 
-IMAGE_AMOUNT = 10
+IMAGE_AMOUNT = 15
 #Initialize weights
-weights = np.ndarray((784,IMAGE_AMOUNT),dtype=np.longdouble)#array 78400x1 (1-dimensional data is Monochrome) (3-diemnsional data is RGB)
+weights = np.ndarray((784,10),dtype=np.float64)#array 784(pixels aka input)x10(10 labels 0..9) (1-dimensional data is Monochrome) (3-diemnsional data is RGB)
 
 for i in weights:
-    i = random.uniform(-1.0,1.0) 
+    i = random.uniform(-10.0,10.0) 
 
 #weights = 2 * np.random.random((784,IMAGE_AMOUNT)) - 1
 
@@ -99,31 +117,68 @@ for i in iter:
     j += 1
     if j == IMAGE_AMOUNT:
         break
-X = np.array(X,dtype=np.longdouble)
-y = np.array(y)
+X = np.array(X,dtype=np.float64)
+y = np.array(y,dtype=np.float64)
 
-print(X.shape)
+print("X,shape=",X.shape)
 # for i in X:
 #     print(i)
-print(weights.shape)
+print("weights.shape=",weights.shape)
 #print(weights)
+print("y.shape=",y.shape)
 #Train
-for j in range(10):
+for iterations in range(10):
     #forward, compute first layer activations (sigmoid)
+    # dot_product = np.dot(X,weights)
+    # for row in dot_product:
+    #     for k in row:
+    #         k = sigmoid(k)
+    # l1 = dot_product
+    # l1 = 1/(1+np.exp(-(np.dot(X,weights))))
+    # # backward (backpropagation) (sigmoid)
+    # l1_delta = (y - l1) * (l1 * (1-l1))
+    #forward, compute first layer activations (ReLU)
     dot_product = np.dot(X,weights)
-    #print("dot_product=",dot_product)
-    #print(dot_product.shape)
+    i: int = 0
+    l1_delta = np.zeros_like(dot_product)#for backward (backpropagation) (ReLU)
+    print(l1_delta)
     for row in dot_product:
+        j: int = 0
         for k in row:
-            k = sigmoid(k)
+            k = max(0,k)
+            if k > 0:
+                l1_delta[i][j] = 1
+            j+=1
+        i+=1
     l1 = dot_product
-    #l1 = 1/(1+np.exp(-(np.dot(X,weights))))
-    #backward
-    l1_delta = (y - l1) * (l1 * (1-l1))
-    #update
+    
+    
+    
+    
+    #update (weights)
     weights += X.T.dot(l1_delta)
+    #calculate loss
+    print("l1=",l1)
+    print("l1.shape=",l1.shape)
+    print("Loss for label 0 =",svm_loss(5,l1))
+    
+#so dot(X,weights) is labels 
+#   0 1 2 3 4 5 6 7 8 9 (labels)
+# 0
+# 1
+# 2
+# 3
+# 4
+# 5
+# 6
+# 7
+# 8
+# 9 (scores)
+#Its possible to calculate SVM_loss using this ^
 
-for row in weights:
-    for i in row:
-        print(i)
+# for row in weights:
+#     for i in row:
+#         print(i)
+
+#Test
 
