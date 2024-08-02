@@ -8,27 +8,23 @@ def convertToPixelsMono(image) -> []:
     for x in range(width):
         for y in range(height):
             r, g, b = rgb_im.getpixel((x, y))
-            r /= 255
+            r /= 255.0
             pixels.append(r)
     return pixels
 
+BATCH_SIZE = 32 #aka Image amount
+#ds_train = load_dataset("ylecun/mnist", split="train",cache_dir="cache")
 ds_train = load_dataset("ylecun/mnist", split="train")
 
-#Get Data
-BATCH_SIZE = 32 #aka Image amount
-train_X = []
-train_y = []
-iter = ds_train.iter(batch_size=1)
-j = 0
-for i in iter:
-    #print(j)
-    train_X.append(convertToPixelsMono(i["image"][0]))
-    train_y.append(i["label"][0])
-    j += 1
-    if j == BATCH_SIZE:
-        break
-train_X = np.array(train_X,dtype=np.longdouble)
-train_y = np.array(train_y,dtype=np.longdouble)
+def get_X_from_batch(batch):
+    X = []
+    print("batch=",batch)
+    for image in batch:
+        X.append(convertToPixelsMono(image))
+    return np.array(X)
+
+def get_Y_from_batch(batch):
+    return np.array(batch)
 
 def init_weights():
     W1 = 2 * np.random.random((784,10)) - 1
@@ -37,9 +33,6 @@ def init_weights():
 
 def ReLU(Z):
     return np.maximum(0,Z)
-
-# def softmax(Z):
-#     return np.exp(Z / np.sum(np.exp(Z)))
 
 def softmax(Z):
     #get matrix, return matrix of probabilites
@@ -74,15 +67,30 @@ def forward(X,W1,W2):
     #         print(c)
     #print("A2.shape=",A2.shape)
     return Z1,A1,Z2,A2
+
+def backward(Z1,A1,Z2,A2,W1,W2,X,Y):
+    print(Z2)
+
     
     
 
-def gradient_descent(X,Y,iterations,alpha):
+def gradient_descent(epochs,alpha):
     W1, W2 = init_weights()
-    for i in range(iterations):
-        Z1,A1,Z2,A2 = forward(X,W1,W2)
-        # backward()
-        # update(W1)
+    for epoch in range(epochs):
+        batch = ds_train.shuffle()
+        batch = batch.flatten_indices()
+        #print("range(len(batch)/BATCH_SIZE)=",len(batch)/BATCH_SIZE)
+        for i in range(int(len(batch)/BATCH_SIZE)):
+            X = get_X_from_batch(batch["image"][i:i+BATCH_SIZE])
+            Y = get_Y_from_batch(batch["label"][i:i+BATCH_SIZE])
+            print("Y=",Y)
+            print("Y.shape=",Y.shape)
+            print("X=",X)
+            print("X.shape=",X.shape)
+            Z1,A1,Z2,A2 = forward(X,W1,W2)
+            # backward()
+            # update(W1)
+            print("Next Batch...")
 
-gradient_descent(train_X,train_y,5,0.1)
+gradient_descent(1,0.1)
 print("End")
