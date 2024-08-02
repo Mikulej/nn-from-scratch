@@ -68,11 +68,24 @@ def forward(X,W1,W2):
     #print("A2.shape=",A2.shape)
     return Z1,A1,Z2,A2
 
-def backward(Z1,A1,Z2,A2,W1,W2,X,Y):
-    print(Z2)
+def one_hot(Y):
+    one_hot_Y = np.zeros((BATCH_SIZE,10))
+    i: int = 0
+    # print("Y=",Y)
+    for row in one_hot_Y:
+        row[Y[i]] = 1
+        i += 1
+    # print("one_hot_Y=",one_hot_Y)
+    # print("one_hot_Y.shape=",one_hot_Y.shape)
+    return one_hot_Y
 
     
     
+def backward(Z1,A1,Z2,A2,W1,W2,X,Y):
+    one_hot_Y = one_hot(Y)
+    dZ1 = A2 - one_hot_Y
+    #print(Z2)
+
 
 def gradient_descent(epochs,alpha):
     W1, W2 = init_weights()
@@ -88,7 +101,7 @@ def gradient_descent(epochs,alpha):
             print("X=",X)
             print("X.shape=",X.shape)
             Z1,A1,Z2,A2 = forward(X,W1,W2)
-            # backward()
+            backward(Z1,A1,Z2,A2,W1,W2,X,Y)
             # update(W1)
             print("Next Batch...")
 
