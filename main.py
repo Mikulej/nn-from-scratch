@@ -39,39 +39,22 @@ def sigmoid(x):
     return z/(1+z)
   
 def svm_loss(label_index: int,output) -> int:
-    loss: np.float64 = 0 # |  ||
-                         # || |_
+    loss_vector: list = []
     i: int = 0
-    output = output.T
-    for row in output:
+    for row in output:   
+        loss: np.float64 = 0
+        j: int = 0
         for c in row:
-            print(c)
-        #print(row)
-        if label_index == i:
-            i += 1
-            continue
-        value: np.float64 = max(0,row[i]-row[label_index]+1.0)
-        loss += value
-        print("Loss =",loss," value =",value)
+            if label_index == j:
+                j += 1
+                continue
+            value: np.float64 = np.maximum(0.0,c-row[label_index]+1.0)
+            loss += value
+            j += 1
+        loss_vector.append(value)
         i += 1
-    return loss
+    return np.array(loss_vector)
   
-#CS231n example 2 layer network
-# X = np.array([[0,0,1],[0,1,1],[1,0,1],[1,1,1]])
-# y = np.array([[0,1,1,0]]).T
-# syn0 =  2*np.random.random((3,4)) - 1
-# syn1 =  2*np.random.random((4,1)) - 1
-# for j in range(6000):
-#     #print(j)
-#     l1 = 1/(1+np.exp(-(np.dot(X,syn0))))
-#     l2 = 1/(1+np.exp(-(np.dot(l1,syn1))))
-#     l2_delta = (y- l2) *(l2*(1-l2))
-#     l1_delta = l2_delta.dot(syn1.T) * (l1 * (1-l1))
-#     syn1 += l1.T.dot(l2_delta)
-#     syn0 += X.T.dot(l1_delta)
-
-
-#layer = Layer(784)
 
 #get info about dataset
 # ds = load_dataset_builder("ylecun/mnist")
@@ -82,7 +65,7 @@ ds = load_dataset("ylecun/mnist", split="train")
 ds_test = load_dataset("ylecun/mnist", split="test")
 print(ds)
 #get label
-# print("Label of image nr0 is: ", ds["label"][0])
+print("Label of image nr0 is: ", ds["label"][0])
 # #get rgb_array/monochrome_array
 # image = ds["image"][0]
 # print("RGB:")
@@ -95,14 +78,9 @@ print(ds)
 # print(ds[2])
 
 
-IMAGE_AMOUNT = 15
+IMAGE_AMOUNT = 100
 #Initialize weights
-weights = np.ndarray((784,10),dtype=np.float64)#array 784(pixels aka input)x10(10 labels 0..9) (1-dimensional data is Monochrome) (3-diemnsional data is RGB)
-
-for i in weights:
-    i = random.uniform(-10.0,10.0) 
-
-#weights = 2 * np.random.random((784,IMAGE_AMOUNT)) - 1
+weights = 2 * np.random.random((784,10)) - 1 # get number from [-1;1]
 
 #Store images in X (inputs)
 #Store labels of images in y (labels/expected output of classifier)
@@ -121,13 +99,13 @@ X = np.array(X,dtype=np.float64)
 y = np.array(y,dtype=np.float64)
 
 print("X,shape=",X.shape)
-# for i in X:
-#     print(i)
 print("weights.shape=",weights.shape)
-#print(weights)
 print("y.shape=",y.shape)
+# print("X=",X)
+# print("weights=",weights)
+
 #Train
-for iterations in range(10):
+for iterations in range(1):
     #forward, compute first layer activations (sigmoid)
     # dot_product = np.dot(X,weights)
     # for row in dot_product:
@@ -139,46 +117,32 @@ for iterations in range(10):
     # l1_delta = (y - l1) * (l1 * (1-l1))
     #forward, compute first layer activations (ReLU)
     dot_product = np.dot(X,weights)
+    #print("dot_product=",dot_product)
     i: int = 0
     l1_delta = np.zeros_like(dot_product)#for backward (backpropagation) (ReLU)
     print(l1_delta)
     for row in dot_product:
         j: int = 0
         for k in row:
-            k = max(0,k)
+            k = np.maximum(0,k)
             if k > 0:
                 l1_delta[i][j] = 1
             j+=1
         i+=1
     l1 = dot_product
-    
-    
-    
-    
+
     #update (weights)
     weights += X.T.dot(l1_delta)
     #calculate loss
-    print("l1=",l1)
-    print("l1.shape=",l1.shape)
-    print("Loss for label 0 =",svm_loss(5,l1))
-    
-#so dot(X,weights) is labels 
-#   0 1 2 3 4 5 6 7 8 9 (labels)
-# 0
-# 1
-# 2
-# 3
-# 4
-# 5
-# 6
-# 7
-# 8
-# 9 (scores)
-#Its possible to calculate SVM_loss using this ^
+    #print("Loss for label 5 =",svm_loss(5,l1))
+    loss = svm_loss(5,l1)
+    print("loss=", loss)
+    print("loss.shape=", loss.shape)
+    #loss = #L_i_vectorized(X.T,5,weights.T)
+    #print("loss=", loss)
+    # print("l1=",l1)
+    # print("l1.shape=",l1.shape)
 
-# for row in weights:
-#     for i in row:
-#         print(i)
 
 #Test
 
