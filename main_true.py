@@ -18,7 +18,7 @@ ds_train = load_dataset("ylecun/mnist", split="train")
 
 def get_X_from_batch(batch):
     X = []
-    print("batch=",batch)
+    #print("batch=",batch)
     for image in batch:
         X.append(convertToPixelsMono(image))
     return np.array(X)
@@ -28,8 +28,10 @@ def get_Y_from_batch(batch):
 
 def init_weights():
     W1 = 2 * np.random.random((784,10)) - 1
+    b1 = 2 * np.random.random((1,10)) - 1
     W2 = 2 * np.random.random((10,10)) - 1
-    return W1, W2
+    b2 = 2 * np.random.random((1,10)) - 1
+    return W1, b1, W2, b2
 
 def ReLU(Z):
     return np.maximum(0,Z)
@@ -51,7 +53,21 @@ def softmax(Z):
 
     return S
 
-def forward(X,W1,W2):
+def cross_entropy_loss(predictions,labels):
+    loss = []
+    for prow ,lrow in zip(predictions, labels):
+        loss.append(-np.sum(lrow * np.log(prow)))
+    loss = np.array(loss)
+    # print("loss=", loss)
+    # print("loss.shape=", loss.shape)
+    return loss
+            
+            
+
+
+
+
+def forward(X,W1, b1, W2, b2):
     Z1 = np.dot(X,W1) #(32, 784)x(784, 10)=(32, 10)
     # print("X.shape=",X.shape)
     # print("W1.shape=",W1.shape)
@@ -65,7 +81,7 @@ def forward(X,W1,W2):
     #     print("np.sum(row)=",np.sum(row))
     #     for c in row:
     #         print(c)
-    #print("A2.shape=",A2.shape)
+    # print("A2.shape=",A2.shape)
     return Z1,A1,Z2,A2
 
 def one_hot(Y):
@@ -83,12 +99,40 @@ def one_hot(Y):
     
 def backward(Z1,A1,Z2,A2,W1,W2,X,Y):
     one_hot_Y = one_hot(Y)
-    dZ1 = A2 - one_hot_Y
-    #print(Z2)
+    # print("A2=",A2)
+    # print("A2.shape=",A2.shape)
+    #dZ2 = cross_entropy_loss(A2,one_hot_Y)
+    dZ2 = A2 - one_hot_Y
+    # print("dZ2=",dZ2)
+    # print("dZ2.shape=",dZ2.shape)
+    #gpt start
+    m = Y.shape[0]
+    dW2 = np.dot(A1.T, dZ2) / m 
+    dA1 = np.dot(dZ2, W2.T) 
 
+    dZ1 = dA1 * (Z1 > 0)
+    dW1 = np.dot(X.T, dZ1) / m 
+    #gpt end
+    return dW1,dW2
+
+def update(W1,W2,dW1,dW2,alpha):
+    W1 -= dW1 * alpha
+    W2 -=  dW2 * alpha
+    return W1, W2
+
+def predict(Z,Y):
+    correct: int = 0
+    i: int = 0
+    for row in Z:
+        print("Label=",Y[i]," predicted=",np.argmax(row)," acc=",np.max(row))
+        if Y[i] == np.argmax(row):
+            correct += 1
+        #predictions.append(np.maximum(row),Y[i])
+        i += 1
+    print("Correct guessed=",correct,"/",BATCH_SIZE)
 
 def gradient_descent(epochs,alpha):
-    W1, W2 = init_weights()
+    W1,b1, W2, b2 = init_weights()
     for epoch in range(epochs):
         batch = ds_train.shuffle()
         batch = batch.flatten_indices()
@@ -96,14 +140,15 @@ def gradient_descent(epochs,alpha):
         for i in range(int(len(batch)/BATCH_SIZE)):
             X = get_X_from_batch(batch["image"][i:i+BATCH_SIZE])
             Y = get_Y_from_batch(batch["label"][i:i+BATCH_SIZE])
-            print("Y=",Y)
-            print("Y.shape=",Y.shape)
-            print("X=",X)
-            print("X.shape=",X.shape)
-            Z1,A1,Z2,A2 = forward(X,W1,W2)
-            backward(Z1,A1,Z2,A2,W1,W2,X,Y)
-            # update(W1)
-            print("Next Batch...")
+            # print("Y=",Y)
+            # print("Y.shape=",Y.shape)
+            # print("X=",X)
+            # print("X.shape=",X.shape)
+            Z1,A1,Z2,A2 = forward(X,W1,b1,W2,b2)
+            dW1, dW2 = backward(Z1,A1,Z2,A2,W1,W2,X,Y)
+            W1, W2 = update(W1,W2,dW1,dW2,alpha)
+            print("Losses=",cross_entropy_loss(A2,one_hot(Y)))
+            predict(A2,Y)
 
-gradient_descent(1,0.1)
+gradient_descent(1,0.003)
 print("End")

@@ -9,8 +9,8 @@ Steps:
 - Initialize weights DONE
 - Do forward pass DONE
 - Do backpropagation
-- Update weigths
-- Loop this by giving another batch from X (total training data), (should I change batch of training data each time I do one step? (forward+backward+update) or should I keep passing the same batch a few times)
+- Update weigths DONE
+- Loop this by giving another batch from X (total training data) DONE
 
 Thoughts:
 Linear algebra is **R**eally **C**ool!
@@ -26,6 +26,14 @@ For some reason it's **C**ool **R**eally
 
 "A.shape will return a tuple (m, n), where m is the number of rows, and n is the number of columns."
 
+When your neural network ends with ...->normalization->loss function
+Calculating gradient starts from loss function **NOT** normalization
+
+Backpropagation is hard
+
+Softmax + Cross Entropy Loss = Good (Easy deriative calculation)
+Useful sources:
+https://www.parasdahal.com/softmax-crossentropy
 # Requirements
 Python 3.11
 [Miniconda](https://docs.anaconda.com/free/miniconda/index.html)
