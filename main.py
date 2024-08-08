@@ -1,17 +1,5 @@
 from datasets import load_dataset
-from datasets import load_dataset_builder
-
-from Layer import *
 import numpy as np
-def convertToPixels(image) -> []:
-    width, height = image.size
-    rgb_im = image.convert('RGB')
-    pixels = []
-    for x in range(width):
-        for y in range(height):
-            r, g, b = rgb_im.getpixel((x, y))
-            pixels.append([r,g,b])
-    return pixels
 
 def convertToPixelsMono(image) -> []:
     width, height = image.size
@@ -20,129 +8,147 @@ def convertToPixelsMono(image) -> []:
     for x in range(width):
         for y in range(height):
             r, g, b = rgb_im.getpixel((x, y))
+            r /= 255.0
             pixels.append(r)
     return pixels
 
-def L_i_vectorized(x,y,W):
-    scores = np.dot(W,x)
-    margins = np.maximum(0,scores - scores[y] + 1)
-    margins[y] = 0
-    loss_i = np.sum(margins)
-    return loss_i
+BATCH_SIZE = 32 #aka Image amount
+#ds_train = load_dataset("ylecun/mnist", split="train",cache_dir="cache")
+ds_train = load_dataset("ylecun/mnist", split="train")
 
-def sigmoid(x):
-  if x > 0:   
-    z = np.exp(-x)
-    return 1/(1+z)
-  else:
-    z = np.exp(x)
-    return z/(1+z)
-  
-def svm_loss(label_index: int,output) -> int:
-    loss_vector: list = []
+def get_X_from_batch(batch):
+    X = []
+    #print("batch=",batch)
+    for image in batch:
+        X.append(convertToPixelsMono(image))
+    return np.array(X)
+
+def get_Y_from_batch(batch):
+    return np.array(batch)
+
+def init_weights():
+    W1 = 2 * np.random.random((784,10)) - 1
+    b1 = 2 * np.random.random((1,10)) - 1
+    W2 = 2 * np.random.random((10,10)) - 1
+    b2 = 2 * np.random.random((1,10)) - 1
+    return W1, b1, W2, b2
+
+def ReLU(Z):
+    return np.maximum(0,Z)
+
+def softmax(Z):
+    #get matrix, return matrix of probabilites
+    S = np.zeros_like(Z)
+    # print("Z=",Z)
+    # print("Z.shape=",Z.shape)
     i: int = 0
-    for row in output:   
-        loss: np.float64 = 0
+    for row in Z: #for each image
         j: int = 0
-        for c in row:
-            if label_index == j:
-                j += 1
-                continue
-            value: np.float64 = np.maximum(0.0,c-row[label_index]+1.0)
-            loss += value
+        for c in row: #for each score
+            S[i][j] = np.exp(c) / np.sum(np.exp(row))
             j += 1
-        loss_vector.append(value)
         i += 1
-    return np.array(loss_vector)
-  
+    # print("S=",S)
+    # print("S.shape=",S.shape)
 
-#get info about dataset
-# ds = load_dataset_builder("ylecun/mnist")
-# print(ds.info.description)
-# print(ds.info.features)
+    return S
 
-ds = load_dataset("ylecun/mnist", split="train")
-ds_test = load_dataset("ylecun/mnist", split="test")
-print(ds)
-#get label
-print("Label of image nr0 is: ", ds["label"][0])
-# #get rgb_array/monochrome_array
-# image = ds["image"][0]
-# print("RGB:")
-# pixels = convertToPixels(image)
-# print(pixels)
-# print("Mono:")
-# pixelsMono = convertToPixelsMono(image)
-# print(pixelsMono)
-# #get row
-# print(ds[2])
+def cross_entropy_loss(predictions,labels):
+    loss = []
+    for prow ,lrow in zip(predictions, labels):
+        loss.append(-np.sum(lrow * np.log(prow)))
+    loss = np.array(loss)
+    # print("loss=", loss)
+    # print("loss.shape=", loss.shape)
+    return loss
+            
+            
 
 
-IMAGE_AMOUNT = 100
-#Initialize weights
-weights = 2 * np.random.random((784,10)) - 1 # get number from [-1;1]
 
-#Store images in X (inputs)
-#Store labels of images in y (labels/expected output of classifier)
-X = []
-y = []
-iter = ds.iter(batch_size=1)
-j = 0
-for i in iter:
-    #print(j)
-    X.append(convertToPixelsMono(i["image"][0]))
-    y.append(i["label"][0])
-    j += 1
-    if j == IMAGE_AMOUNT:
-        break
-X = np.array(X,dtype=np.float64)
-y = np.array(y,dtype=np.float64)
 
-print("X,shape=",X.shape)
-print("weights.shape=",weights.shape)
-print("y.shape=",y.shape)
-# print("X=",X)
-# print("weights=",weights)
+def forward(X,W1, b1, W2, b2):
+    Z1 = np.dot(X,W1) #(32, 784)x(784, 10)=(32, 10)
+    # print("X.shape=",X.shape)
+    # print("W1.shape=",W1.shape)
+    # print("Z1.shape=",Z1.shape)
+    A1 = ReLU(Z1) # (32, 10)
+    #print("A1.shape=",A1.shape)
+    Z2 = np.dot(A1,W2) #(32, 10)x(10, 10)=(32, 10)
+    #print("Z2.shape=",Z2.shape)
+    A2 = softmax(Z2)
+    # for row in A2:
+    #     print("np.sum(row)=",np.sum(row))
+    #     for c in row:
+    #         print(c)
+    # print("A2.shape=",A2.shape)
+    return Z1,A1,Z2,A2
 
-#Train
-for iterations in range(1):
-    #forward, compute first layer activations (sigmoid)
-    # dot_product = np.dot(X,weights)
-    # for row in dot_product:
-    #     for k in row:
-    #         k = sigmoid(k)
-    # l1 = dot_product
-    # l1 = 1/(1+np.exp(-(np.dot(X,weights))))
-    # # backward (backpropagation) (sigmoid)
-    # l1_delta = (y - l1) * (l1 * (1-l1))
-    #forward, compute first layer activations (ReLU)
-    dot_product = np.dot(X,weights)
-    #print("dot_product=",dot_product)
+def one_hot(Y):
+    one_hot_Y = np.zeros((BATCH_SIZE,10))
     i: int = 0
-    l1_delta = np.zeros_like(dot_product)#for backward (backpropagation) (ReLU)
-    print(l1_delta)
-    for row in dot_product:
-        j: int = 0
-        for k in row:
-            k = np.maximum(0,k)
-            if k > 0:
-                l1_delta[i][j] = 1
-            j+=1
-        i+=1
-    l1 = dot_product
+    # print("Y=",Y)
+    for row in one_hot_Y:
+        row[Y[i]] = 1
+        i += 1
+    # print("one_hot_Y=",one_hot_Y)
+    # print("one_hot_Y.shape=",one_hot_Y.shape)
+    return one_hot_Y
 
-    #update (weights)
-    weights += X.T.dot(l1_delta)
-    #calculate loss
-    #print("Loss for label 5 =",svm_loss(5,l1))
-    loss = svm_loss(5,l1)
-    print("loss=", loss)
-    print("loss.shape=", loss.shape)
-    #loss = #L_i_vectorized(X.T,5,weights.T)
-    #print("loss=", loss)
-    # print("l1=",l1)
-    # print("l1.shape=",l1.shape)
+    
+    
+def backward(Z1,A1,Z2,A2,W1,W2,X,Y):
+    one_hot_Y = one_hot(Y)
+    # print("A2=",A2)
+    # print("A2.shape=",A2.shape)
+    #dZ2 = cross_entropy_loss(A2,one_hot_Y)
+    dZ2 = A2 - one_hot_Y
+    # print("dZ2=",dZ2)
+    # print("dZ2.shape=",dZ2.shape)
+    #gpt start
+    m = Y.shape[0]
+    dW2 = np.dot(A1.T, dZ2) / m 
+    dA1 = np.dot(dZ2, W2.T) 
 
+    dZ1 = dA1 * (Z1 > 0)
+    dW1 = np.dot(X.T, dZ1) / m 
+    #gpt end
+    return dW1,dW2
 
-#Test
+def update(W1,W2,dW1,dW2,alpha):
+    W1 -= dW1 * alpha
+    W2 -=  dW2 * alpha
+    return W1, W2
 
+def predict(Z,Y):
+    correct: int = 0
+    i: int = 0
+    for row in Z:
+        print("Label=",Y[i]," predicted=",np.argmax(row)," acc=",np.max(row))
+        if Y[i] == np.argmax(row):
+            correct += 1
+        #predictions.append(np.maximum(row),Y[i])
+        i += 1
+    print("Correct guessed=",correct,"/",BATCH_SIZE)
+
+def gradient_descent(epochs,alpha):
+    W1,b1, W2, b2 = init_weights()
+    for epoch in range(epochs):
+        batch = ds_train.shuffle()
+        batch = batch.flatten_indices()
+        #print("range(len(batch)/BATCH_SIZE)=",len(batch)/BATCH_SIZE)
+        for i in range(int(len(batch)/BATCH_SIZE)):
+            X = get_X_from_batch(batch["image"][i:i+BATCH_SIZE])
+            Y = get_Y_from_batch(batch["label"][i:i+BATCH_SIZE])
+            # print("Y=",Y)
+            # print("Y.shape=",Y.shape)
+            # print("X=",X)
+            # print("X.shape=",X.shape)
+            Z1,A1,Z2,A2 = forward(X,W1,b1,W2,b2)
+            dW1, dW2 = backward(Z1,A1,Z2,A2,W1,W2,X,Y)
+            W1, W2 = update(W1,W2,dW1,dW2,alpha)
+            print("Losses=",cross_entropy_loss(A2,one_hot(Y)))
+            predict(A2,Y)
+
+gradient_descent(1,0.003)
+print("End")
