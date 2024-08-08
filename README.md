@@ -65,21 +65,21 @@ e.g. `x = 2y^3 + z, dx/dx = ? dx/dy = ?, dx/dz = ?`
 Backpropagation starts from the end of the network:
 1. Squared loss, gradient = *dL/dL* = 1 (last layer always has gradient = 1)
 2. `L=z3**2` gradient = *dL/dz3* = `2*z3` (z3 represents data/value that z3 holds)
-lets say `z3.data=1.27` then `z3.grad=2*z3.data` = `z3.grad=2*1.27` = `z3.grad=2.54`
+Let's say `z3.data=1.27` then `z3.grad=2*z3.data` = `z3.grad=2*1.27` = `z3.grad=2.54`
 so if we increase z3 it will increase output, since the last layer is loss we want to
 minimalize it, that's why in update we do negate the gradient e.g `w.data += -w.grad * learning_rate`
 3. `z3 = y-z2` gradient = *dL/dy* = `dL/z3*z3/y` (we apply chain rule here)
-To get global gradient for y we need to multiply global gradient from output with local gradient
-We take global gradient from 1 step above like here from step 2. *dL/dz3* = `z3.grad=2.54` 
-Local gradient is *dz3/dy* = `1+0` = `1` and *dz3/dz2* = `0-1` = `-1`
-`global_gradient` = `global_gradient_from_parent_operation*local_gradient`
+To get global gradient for y we need to multiply global gradient from output with local gradient  
+We take global gradient from 1 step above like here from step 2. *dL/dz3* = `z3.grad=2.54`  
+Local gradient is *dz3/dy* = `1+0` = `1` and *dz3/dz2* = `0-1` = `-1`  
+`global_gradient` = `global_gradient_from_parent_operation*local_gradient`  
 *dL/dy* = `z3.grad=2.54` * `dz3/dy=1` = `y.grad=2.54`
 *dL/dz2* = `z3.grad=2.54` * `dz3/dz2=-1` = `z2.grad=-2.54`
 y doesn't need gradient anyway since it's a label, we can't control it
-4. `z2 = z1 + b` 
-*dL/dz1* = `z2.grad=-2.54` * `dz2/dz1=1` = `z1.grad=-2.54`
-*dL/db* = `z2.grad=-2.54` * `dz2/db=1` = `b.grad=-2.54`
-5. `z1 = x * w` (lets assume x = 2)
+4. `z2 = z1 + b`  
+*dL/dz1* = `z2.grad=-2.54` * `dz2/dz1=1` = `z1.grad=-2.54`  
+*dL/db* = `z2.grad=-2.54` * `dz2/db=1` = `b.grad=-2.54`  
+5. `z1 = x * w` (lets assume x = 2)  
 *dL/dw* = `z1.grad=-2.54` * `dz1/dw=x=2` = `w.grad=-5.08`
 
 Now we know in which direction we should shift weight and bias to minimalize the loss
