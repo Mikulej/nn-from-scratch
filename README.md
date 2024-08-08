@@ -8,7 +8,7 @@ Dataset https://huggingface.co/datasets/ylecun/mnist
 Steps:
 - Initialize weights DONE
 - Do forward pass DONE
-- Do backpropagation
+- Do backpropagation 
 - Update weigths DONE
 - Loop this by giving another batch from X (total training data) DONE
 
@@ -32,7 +32,7 @@ Backpropagation might be hard to understand but when you do understand it, it be
 
 Softmax + Cross Entropy Loss = Good (Easy deriative calculation)
 
-Useful sources:
+Useful sources:  
 https://www.parasdahal.com/softmax-crossentropy  
 https://youtu.be/VMj-3S1tku0?si=WmW3sketuuTzM0qv  
 https://github.com/karpathy/micrograd
