@@ -2,17 +2,22 @@
 
 Personal project with simple objective:   
 Learn deep learning by creating neural network capable of image detection.  
-Without using libraries like PyTorch or TensorFlow!  
+Without using high-level libraries like PyTorch or TensorFlow!  
 Dataset https://huggingface.co/datasets/ylecun/mnist
 
-Steps:
-- Initialize weights DONE
-- Do forward pass DONE
-- Do backpropagation DONE
-- Update weigths DONE
-- Loop this by giving another batch from X (total training data) DONE
+## Results
+Model trained on 100 batches, 1 epoch, learning rate set to 0.03  
+![alt text](showcase/output.png)  
+![alt text](showcase/loss.png)  
+![alt text](showcase/accuracy.png)  
 
-Thoughts:
+# Requirements
+Python 3.11
+[Miniconda](https://docs.anaconda.com/free/miniconda/index.html)
+`pip install -r requirements.txt`
+
+# Personal Notes
+Thoughts:  
 Linear algebra is **R**eally **C**ool!
 Requirement for dot product of `m1 x m2` is `m1.numberOfcolumns==m2.numberOfrows`
 ```py
@@ -39,12 +44,9 @@ https://www.parasdahal.com/softmax-crossentropy
 https://youtu.be/VMj-3S1tku0?si=WmW3sketuuTzM0qv  
 https://github.com/karpathy/micrograd  
 https://cs231n.github.io/optimization-2/#mat
-# Requirements
-Python 3.11
-[Miniconda](https://docs.anaconda.com/free/miniconda/index.html)
-`pip install -r requirements.txt`
 
-# About Backpropagation
+
+## About Backpropagation
 We represent each weight as a tuple/class of data/value it holds and "global" gradient.
 "Global" gradient tell us in which direction shifting data by small amount will **increase** the **final** output.
 

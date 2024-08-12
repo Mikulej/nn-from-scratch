@@ -148,7 +148,7 @@ def predict(Z,Y) -> float:
             correct += 1
         #predictions.append(np.maximum(row),Y[i])
         i += 1
-    print("Correct guessed=",correct,"/",BATCH_SIZE)
+    print("Correctly guessed=",correct,"/",BATCH_SIZE)
 
 def get_accuracy(Z,Y) -> float:
     correct: int = 0
@@ -161,8 +161,8 @@ def get_accuracy(Z,Y) -> float:
     return correct / float(BATCH_SIZE)
 
 def gradient_descent(epochs,learning_rate,ds_train):
-    STEP: int = 10
-    LIMIT: int = 3000
+    STEP: int = 5
+    LIMIT: int = 100
     plot_iter = []
     plot_accuracy = []
     plot_loss = []
@@ -170,19 +170,15 @@ def gradient_descent(epochs,learning_rate,ds_train):
     for epoch in range(epochs):
         batch = ds_train.shuffle()
         batch = batch.flatten_indices()
-        #print("range(len(batch)/BATCH_SIZE)=",len(batch)/BATCH_SIZE)
         for i in range(int(len(batch)/BATCH_SIZE)):
-            X = get_X_from_batch(batch["image"][i:i+BATCH_SIZE])
-            Y = get_Y_from_batch(batch["label"][i:i+BATCH_SIZE])
-            # print("Y=",Y)
-            # print("Y.shape=",Y.shape)
-            # print("X=",X)
-            # print("X.shape=",X.shape)
+            X = get_X_from_batch(batch["image"][0:BATCH_SIZE])
+            Y = get_Y_from_batch(batch["label"][0:BATCH_SIZE])
             Z1,A1,Z2,A2,loss = forward(X,W1,b1,W2,b2,Y)
             dW1, dW2, db1, db2 = backward(Z1,A1,Z2,A2,W1,W2,X,Y)
             W1, W2, b1, b2 = update(W1,W2,b1,b2,dW1,dW2,db1,db2,learning_rate)
             print("Losses=",loss)
             predict(A2,Y)
+            print("Iteration ",i,"/",LIMIT)
             if i % STEP == 0:
                 plot_iter.append(i)
                 plot_accuracy.append(get_accuracy(A2,Y))
