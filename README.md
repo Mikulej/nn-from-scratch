@@ -7,14 +7,14 @@ Dataset https://huggingface.co/datasets/ylecun/mnist
 
 ## Results
 Model trained on 100 batches, 1 epoch, learning rate set to 0.03  
-![alt text](showcase/output.png)  
 ![alt text](showcase/loss.png)  
 ![alt text](showcase/accuracy.png)  
+![alt text](showcase/output.png)  
 
 # Requirements
-Python 3.11
-[Miniconda](https://docs.anaconda.com/free/miniconda/index.html)
-`pip install -r requirements.txt`
+Python 3.11  
+[Miniconda](https://docs.anaconda.com/free/miniconda/index.html)  
+`pip install -r requirements.txt`  
 
 # Personal Notes
 Thoughts:  
