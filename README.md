@@ -8,7 +8,7 @@ Dataset https://huggingface.co/datasets/ylecun/mnist
 Steps:
 - Initialize weights DONE
 - Do forward pass DONE
-- Do backpropagation
+- Do backpropagation DONE
 - Update weigths DONE
 - Loop this by giving another batch from X (total training data) DONE
 
@@ -31,6 +31,8 @@ Calculating gradient starts from loss function **NOT** normalization
 Backpropagation might be hard to understand but when you do understand it, it becomes quite easy as a concept.
 
 Softmax + Cross Entropy Loss = Good (Easy deriative calculation)
+
+Sometimes matrix (N, N) might be a problem, try to transpose it!  
 
 Useful sources:
 https://www.parasdahal.com/softmax-crossentropy  

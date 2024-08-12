@@ -67,7 +67,7 @@ def cross_entropy_loss(predictions,labels):
 
 
 
-def forward(X,W1, b1, W2, b2):
+def forward(X,W1, b1, W2, b2,Y):
     Z1 = np.dot(X,W1) #(32, 784)x(784, 10)=(32, 10)
     # print("X.shape=",X.shape)
     # print("W1.shape=",W1.shape)
@@ -82,7 +82,8 @@ def forward(X,W1, b1, W2, b2):
     #     for c in row:
     #         print(c)
     # print("A2.shape=",A2.shape)
-    return Z1,A1,Z2,A2
+    loss = cross_entropy_loss(A2,one_hot(Y))
+    return Z1,A1,Z2,A2,loss
 
 def one_hot(Y):
     one_hot_Y = np.zeros((BATCH_SIZE,10))
@@ -103,21 +104,36 @@ def backward(Z1,A1,Z2,A2,W1,W2,X,Y):
     # print("A2.shape=",A2.shape)
     #dZ2 = cross_entropy_loss(A2,one_hot_Y)
     dZ2 = A2 - one_hot_Y
-    # print("dZ2=",dZ2)
+    
+    #m = Y.shape[0]
+    dW2 = dZ2.T.dot(A1).T # (10, 10) = (10, 32) x (32, 10)
     # print("dZ2.shape=",dZ2.shape)
-    #gpt start
-    m = Y.shape[0]
-    dW2 = np.dot(A1.T, dZ2) / m 
-    dA1 = np.dot(dZ2, W2.T) 
+    # print("A1.shape=",A1.shape)
+    # print("dW2.shape=",dW2.shape)
+    dA1 = dZ2.dot(W2.T) # (32, 10) = (32, 10) x (10, 10)
+    #print("dA1.shape=",dA1.shape)
 
-    dZ1 = dA1 * (Z1 > 0)
-    dW1 = np.dot(X.T, dZ1) / m 
+    dZ1 = dA1 * (Z1 > 0) # (32, 10) = (32, 10) x (32, 10)
+    # print("dZ1.shape=",dZ1.shape) # (32, 10)
+    # print("dA1.shape=",dA1.shape) # (32, 10)
+    # print("Z1.shape=",Z1.shape) # (32, 10)
+
+    dW1 = dZ1.T.dot(X).T
+    # print("dW1.shape=",dW1.shape) # (784, 10) 
+    # print("X.shape=",X.shape) # (32, 784)
+    #gpt start
+    # m = Y.shape[0]
+    # dW2 = np.dot(A1.T, dZ2) / m 
+    # dA1 = np.dot(dZ2, W2.T) 
+
+    # dZ1 = dA1 * (Z1 > 0)
+    # dW1 = np.dot(X.T, dZ1) / m 
     #gpt end
     return dW1,dW2
 
 def update(W1,W2,dW1,dW2,alpha):
-    W1 -= dW1 * alpha
-    W2 -=  dW2 * alpha
+    W1 += -dW1 * alpha
+    W2 +=  -dW2 * alpha
     return W1, W2
 
 def predict(Z,Y):
@@ -144,11 +160,11 @@ def gradient_descent(epochs,alpha):
             # print("Y.shape=",Y.shape)
             # print("X=",X)
             # print("X.shape=",X.shape)
-            Z1,A1,Z2,A2 = forward(X,W1,b1,W2,b2)
+            Z1,A1,Z2,A2,loss = forward(X,W1,b1,W2,b2,Y)
             dW1, dW2 = backward(Z1,A1,Z2,A2,W1,W2,X,Y)
             W1, W2 = update(W1,W2,dW1,dW2,alpha)
-            print("Losses=",cross_entropy_loss(A2,one_hot(Y)))
+            print("Losses=",loss)
             predict(A2,Y)
 
-gradient_descent(1,0.003)
+gradient_descent(1,0.03)
 print("End")
