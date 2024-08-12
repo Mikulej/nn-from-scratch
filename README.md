@@ -37,7 +37,8 @@ Sometimes matrix (N, N) might be a problem, try to transpose it!
 Useful sources:  
 https://www.parasdahal.com/softmax-crossentropy  
 https://youtu.be/VMj-3S1tku0?si=WmW3sketuuTzM0qv  
-https://github.com/karpathy/micrograd
+https://github.com/karpathy/micrograd  
+https://cs231n.github.io/optimization-2/#mat
 # Requirements
 Python 3.11
 [Miniconda](https://docs.anaconda.com/free/miniconda/index.html)
